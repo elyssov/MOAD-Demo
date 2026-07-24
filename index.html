@@ -13,19 +13,42 @@
     .visual { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 700ms ease; }
     .visual.visible { opacity: 1; }
     .shade { position: absolute; inset: 0; background: radial-gradient(circle at 50% 45%, transparent 42%, rgba(0,0,0,.48) 100%); pointer-events: none; }
-    .imageTitle { position: absolute; left: 42px; bottom: 42px; max-width: 760px; font-size: 28px; color: #f3d99a; text-shadow: 0 2px 8px #000; opacity: .92; }
+    .imageTitle { display: none; }
+    .byline {
+      position: absolute;
+      opacity: 0;
+      transition: opacity 420ms ease;
+      color: #44200d;
+      text-shadow: 0 0 .5px rgba(50,22,8,.28);
+      pointer-events: none;
+    }
+    .byline.visible { opacity: .72; }
     #text { position: absolute; white-space: pre-wrap; color: #2a1408; opacity: 0; transition: opacity 420ms ease; }
     #text.visible { opacity: 1; }
     .alice #text {
-      left: 26.1vw; top: 28.5vh; width: 32.5vw; max-height: 40vh;
-      font-family: AliceHand, cursive; font-size: min(3.0vw, 39px); line-height: 1.12;
-      color: #54210d; transform: perspective(900px) rotateX(2deg) rotateZ(-0.8deg) skewX(-1.5deg);
+      left: 7.4vw; top: 15.2vh; width: 77.8vw; height: 61.8vh;
+      font-family: AliceHand, cursive; font-size: min(2.05vw, 28px); line-height: 1.22;
+      column-count: 2; column-gap: 8.1vw; overflow: hidden;
+      color: #54210d; transform: perspective(900px) rotateX(1.2deg) rotateZ(-0.65deg) skewX(-1.1deg);
       text-shadow: 0 0 .7px rgba(50,22,8,.35);
+    }
+    .alice .byline {
+      left: 8.3vw; top: 10.9vh;
+      font-family: AliceHand, cursive;
+      font-size: min(2.25vw, 30px);
+      transform: perspective(900px) rotateX(1.2deg) rotateZ(-0.65deg) skewX(-1.1deg);
     }
     .eugene #text {
       left: 38.2vw; top: 11.2vh; width: 31.2vw; max-height: 27vh;
       font-family: EugeneType, monospace; font-size: min(1.45vw, 23px); line-height: 1.24;
       color: #17100a; letter-spacing: .2px;
+    }
+    .eugene .byline {
+      left: 38.2vw; top: 7.1vh;
+      font-family: EugeneType, monospace;
+      font-size: min(1.25vw, 19px);
+      color: #17100a;
+      letter-spacing: .2px;
     }
     .hud { position: absolute; left: 28px; right: 28px; bottom: 20px; display: flex; justify-content: space-between; gap: 16px; font: 17px/1.2 EugeneType, monospace; color: #f2d89a; text-shadow: 0 2px 6px #000; pointer-events: none; }
     .hud span { background: rgba(0,0,0,.25); padding: 7px 10px; border-radius: 4px; }
@@ -50,6 +73,7 @@
     <img id="visual" class="visual" alt="">
     <div class="shade"></div>
     <div id="imageTitle" class="imageTitle"></div>
+    <div id="byline" class="byline"></div>
     <div id="text"></div>
     <div class="hud"><span>Space / Enter: next</span><span id="counter"></span></div>
     <div id="start" class="start">
@@ -67,12 +91,14 @@
     const visual = document.getElementById('visual');
     const text = document.getElementById('text');
     const title = document.getElementById('imageTitle');
+    const byline = document.getElementById('byline');
     const counter = document.getElementById('counter');
     const start = document.getElementById('start');
     const startBtn = document.getElementById('startBtn');
     let index = 0;
     let voice = new Audio();
     let beds = [];
+    let currentBedKey = '';
     let stopTimer = 0;
 
     function stopAudio() {
@@ -81,13 +107,19 @@
       voice = new Audio();
       beds.forEach(a => a.pause());
       beds = [];
+      currentBedKey = '';
     }
 
     function playBeds(slide) {
+      const key = (slide.ambience || []).join('|');
+      if (key === currentBedKey && beds.length) return;
+      beds.forEach(a => a.pause());
+      beds = [];
+      currentBedKey = key;
       beds = (slide.ambience || []).map((src, i) => {
         const a = new Audio(src);
         a.loop = true;
-        a.volume = i === 0 ? 0.22 : 0.10;
+        a.volume = i === 0 ? 0.42 : 0.24;
         a.play().catch(() => {});
         return a;
       });
@@ -106,7 +138,9 @@
     }
 
     function show(i) {
-      stopAudio();
+      clearTimeout(stopTimer);
+      voice.pause();
+      voice = new Audio();
       index = Math.max(0, Math.min(i, slides.length - 1));
       const slide = slides[index];
       stage.className = slide.speaker || '';
@@ -116,11 +150,15 @@
       visual.src = slide.kind === 'image' ? slide.image : slide.captionBackground;
       visual.classList.add('visible');
       if (slide.kind === 'image') {
-        title.textContent = slide.title;
+        title.textContent = '';
+        byline.textContent = '';
+        byline.classList.remove('visible');
         text.classList.remove('visible');
         text.textContent = '';
       } else {
         title.textContent = '';
+        byline.textContent = slide.speaker === 'alice' ? 'Lady Alice Compton' : 'Lord Eugene Compton';
+        byline.classList.add('visible');
         text.textContent = slide.text;
         text.classList.add('visible');
       }
