@@ -10,7 +10,7 @@ It packages illustrated frames, dual-character voiceover, ambient sound, and
 typewriter-style captions into a single browser experience with no build step
 and no external runtime.
 
-The main game is a 1930s occult adventure about Lord Eugene and Lady Alice
+The main game is a 1930s occult adventure about Lord Conrad and Lady Alice
 Compton, two parents who enter an ancient Egyptian horror to recover their
 nine-year-old son. Its design principle is simple: mechanics should carry the
 story. Magic changes Alice visibly; violence can destroy information as well as
